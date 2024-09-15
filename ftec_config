@@ -6,41 +6,62 @@ import os
 
 SYSFS_DIR="/sys/module/hid_fanatec/drivers/hid:fanatec/"
 
-def find_sysfs() -> str:
-    counter=0
-    for(root,dirs,files) in os.walk(SYSFS_DIR, followlinks=True):
-        counter += 1
+# search for advanced function directory in sysdfs
+def find_ftec_tuning() -> str:
+    top=SYSFS_DIR
+    
+    if not os.path.isdir(top):
+        raise Exception('${top} not found')
 
-        # arbitrary max counter value to avoid loops
-        if counter > 100:
-            raise Exception(f'sysfs not found (counter={counter})')
+    for(root,dirs,files) in os.walk(top, followlinks=True):
+        current_depth = root.count(os.sep) - top.count(os.sep)
+
+        # max depth to avoid loops
+        if current_depth > 1:
+            del dirs[:]
 
         if "ftec_tuning" in dirs:
             ftec_tuning_dir=os.path.join(root, "ftec_tuning")
             device_id=os.path.basename(os.path.dirname(ftec_tuning_dir))
             return os.path.join(ftec_tuning_dir,device_id)
 
-    raise Exception('sysfs not found')
+    raise Exception('ftec_tuning directory not found')
 
 def applyConfiguration(filename: str, profile: str, output: str):
+    if not os.path.isfile(filename):
+        raise Exception(f'file ${filename} does not exist')
+
     parser = configparser.RawConfigParser()
     parser.optionxform = str
     parser.read(filename)
+
+    # Validate consistency
+    for name, value in parser.items(profile):
+        fpath = os.path.join(output, name)
+        if not os.path.isfile(fpath):
+            raise Exception(f'file ${fpath} not found') # Ignore only?
 
     for name, value in parser.items(profile):
         fpath = os.path.join(output, name)
         with open(fpath, "w") as f:
             f.write(value)
 
+
 def main():
     parser = argparse.ArgumentParser()
     # parser.add_argument('filename')
-    parser.add_argument('filename', nargs='?', const=1, type=str, default="profiles.ini")
-    parser.add_argument('profile')
-    parser.add_argument('output', nargs='?', const=1, type=str, default=find_sysfs())
+    # parser.add_argument('filename', nargs='?', const=1, type=str, default="profiles.ini")
+    parser.add_argument('-p', '--profile', type=str)
+    parser.add_argument('-o', '--output', nargs='?', const=1, type=str)
+    parser.add_argument('-i', '--input', nargs='?', const=1, type=str, default="profiles.ini")
+    
     args = parser.parse_args()
-    applyConfiguration(args.filename, args.profile, args.output)
-    applyConfiguration(args.filename, "all", args.output)
+
+    if args.output is None:
+        args.output = find_ftec_tuning()
+
+    applyConfiguration(args.input, "all", args.output)
+    applyConfiguration(args.input, args.profile, args.output)
 
 
 if __name__ == "__main__":
