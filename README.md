@@ -1,4 +1,8 @@
 # ftec_config
+```
+![Visitor Count](https://profile-counter.glitch.me/ftec_config/count.svg)
+```
+
 Python script to configure Fanatec Wheel under Linux using Sysfs
 
 ## Usage
@@ -23,6 +27,7 @@ Test configuration
 - list available devices (`name` available in `input` directory): `./ftec_config --list-devices`
 - possiblity to configure multiple slot at the same time
 - gui?
+- detect launched game and autoapply?
 
 
 ## Notes
@@ -47,7 +52,7 @@ FOR=100 (OFF=0,120)
 SPR=100 (OFF=0,120)  
 DPR=100 (OFF=0,120)  
 BRF=50 (MIN=0,MAX=100)  
-
+  
 
 ```
 $ tree /sys/module/hid_fanatec/drivers/hid:fanatec/0003:0EB7:0020.0008/
