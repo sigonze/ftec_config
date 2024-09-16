@@ -1,7 +1,4 @@
 # ftec_config
-```
-![Visitor Count](https://profile-counter.glitch.me/ftec_config/count.svg)
-```
 
 Python script to configure Fanatec Wheel under Linux using Sysfs
 
