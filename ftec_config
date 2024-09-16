@@ -6,8 +6,9 @@ import logging
 import os
 import sys
 
-# search for advanced function directory in sysdfs
-def find_ftec_tuning(top: str) -> str:
+
+# recursive file search
+def search_filepath(top: str, filename: str, max_depth: int = 3) -> str:
     if not os.path.isdir(top):
         raise Exception(f'topdir {top} not found')
 
@@ -15,16 +16,13 @@ def find_ftec_tuning(top: str) -> str:
         current_depth = root.count(os.sep) - top.count(os.sep)
 
         # max depth to avoid loops
-        if current_depth > 1:
+        if current_depth > max_depth:
             del dirs[:]
 
-        if 'ftec_tuning' in dirs:
-            ftec_tuning_dir=os.path.join(root, 'ftec_tuning')
-            device_id=os.path.basename(os.path.dirname(ftec_tuning_dir))
-            logging.debug(f'found device {device_id}')
-            return os.path.join(ftec_tuning_dir,device_id)
+        if filename in files:
+            return root
 
-    raise Exception('ftec_tuning directory not found')
+    raise Exception('{filename} not found')
 
 
 # Configure driver
@@ -58,7 +56,14 @@ def main():
     args = parser.parse_args()
 
     try:
-        output = find_ftec_tuning( args.topdir )
+        output = search_filepath( args.topdir, 'advanced_mode' )
+        logging.debug(f'output_dir={output}')
+
+        device_input = search_filepath( args.topdir, 'name' )
+        # logging.debug(f'device_input={device_input}')
+        with open( os.path.join(device_input, 'name'), "r" ) as f:
+            device_name = f.read()
+            logging.info(f'device="{device_name.strip()}"')
 
         # TODO: remove all and force advance mode 
         applyConfiguration(args.input, "all", output)
