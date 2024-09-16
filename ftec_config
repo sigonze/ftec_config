@@ -4,12 +4,9 @@ import configparser
 import argparse
 import os
 
-SYSFS_DIR="/sys/module/hid_fanatec/drivers/hid:fanatec/"
 
 # search for advanced function directory in sysdfs
-def find_ftec_tuning() -> str:
-    top=SYSFS_DIR
-    
+def find_ftec_tuning(top: str) -> str:
     if not os.path.isdir(top):
         raise Exception('${top} not found')
 
@@ -27,6 +24,8 @@ def find_ftec_tuning() -> str:
 
     raise Exception('ftec_tuning directory not found')
 
+
+# Configure driver
 def applyConfiguration(filename: str, profile: str, output: str):
     if not os.path.isfile(filename):
         raise Exception(f'file ${filename} does not exist')
@@ -47,21 +46,19 @@ def applyConfiguration(filename: str, profile: str, output: str):
             f.write(value)
 
 
+# main funciton
 def main():
     parser = argparse.ArgumentParser()
-    # parser.add_argument('filename')
-    # parser.add_argument('filename', nargs='?', const=1, type=str, default="profiles.ini")
     parser.add_argument('-p', '--profile', type=str)
-    parser.add_argument('-o', '--output', nargs='?', const=1, type=str)
+    parser.add_argument('-t', '--topdir', nargs='?', const=1, type=str, default="/sys/module/hid_fanatec/drivers/hid:fanatec/")
     parser.add_argument('-i', '--input', nargs='?', const=1, type=str, default="profiles.ini")
-    
     args = parser.parse_args()
 
-    if args.output is None:
-        args.output = find_ftec_tuning()
+    output = find_ftec_tuning( args.topdir )
 
-    applyConfiguration(args.input, "all", args.output)
-    applyConfiguration(args.input, args.profile, args.output)
+    # TODO: remove all and force advance mode 
+    applyConfiguration(args.input, "all", output)
+    applyConfiguration(args.input, args.profile, output)
 
 
 if __name__ == "__main__":
