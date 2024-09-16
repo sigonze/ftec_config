@@ -2,13 +2,14 @@
 
 import configparser
 import argparse
+import logging
 import os
-
+import sys
 
 # search for advanced function directory in sysdfs
 def find_ftec_tuning(top: str) -> str:
     if not os.path.isdir(top):
-        raise Exception('${top} not found')
+        raise Exception(f'topdir {top} not found')
 
     for(root,dirs,files) in os.walk(top, followlinks=True):
         current_depth = root.count(os.sep) - top.count(os.sep)
@@ -17,9 +18,10 @@ def find_ftec_tuning(top: str) -> str:
         if current_depth > 1:
             del dirs[:]
 
-        if "ftec_tuning" in dirs:
-            ftec_tuning_dir=os.path.join(root, "ftec_tuning")
+        if 'ftec_tuning' in dirs:
+            ftec_tuning_dir=os.path.join(root, 'ftec_tuning')
             device_id=os.path.basename(os.path.dirname(ftec_tuning_dir))
+            logging.debug(f'found device {device_id}')
             return os.path.join(ftec_tuning_dir,device_id)
 
     raise Exception('ftec_tuning directory not found')
@@ -28,38 +30,44 @@ def find_ftec_tuning(top: str) -> str:
 # Configure driver
 def applyConfiguration(filename: str, profile: str, output: str):
     if not os.path.isfile(filename):
-        raise Exception(f'file ${filename} does not exist')
+        raise Exception(f'file {filename} does not exist')
 
     parser = configparser.RawConfigParser()
     parser.optionxform = str
     parser.read(filename)
 
-    # Validate consistency
     for name, value in parser.items(profile):
         fpath = os.path.join(output, name)
+        # if parameter not found just skip it
         if not os.path.isfile(fpath):
-            raise Exception(f'file ${fpath} not found') # Ignore only?
-
-    for name, value in parser.items(profile):
-        fpath = os.path.join(output, name)
-        with open(fpath, "w") as f:
-            f.write(value)
+            logging.debug(f'{name} does not exist (skipped)')
+        else:
+            with open(fpath, "w") as f:
+                f.write(value)
+            logging.debug(f'{name} set to {value}')
 
 
 # main funciton
 def main():
+    logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG)
+
     parser = argparse.ArgumentParser()
     parser.add_argument('-p', '--profile', type=str)
     parser.add_argument('-t', '--topdir', nargs='?', const=1, type=str, default="/sys/module/hid_fanatec/drivers/hid:fanatec/")
     parser.add_argument('-i', '--input', nargs='?', const=1, type=str, default="profiles.ini")
     args = parser.parse_args()
 
-    output = find_ftec_tuning( args.topdir )
+    try:
+        output = find_ftec_tuning( args.topdir )
 
-    # TODO: remove all and force advance mode 
-    applyConfiguration(args.input, "all", output)
-    applyConfiguration(args.input, args.profile, output)
+        # TODO: remove all and force advance mode 
+        applyConfiguration(args.input, "all", output)
+        applyConfiguration(args.input, args.profile, output)
+        sys.exit(0)
 
+    except Exception as e:
+        logging.error(e)
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

@@ -1,5 +1,5 @@
 # ftec_config
-Python script to configure Fanatec Wheel under Linux using SysFS
+Python script to configure Fanatec Wheel under Linux using Sysfs
 
 ## Usage
 
@@ -18,34 +18,35 @@ Test configuration
 - support string arguments (such as `AUTO`, `OFF`, `MIN`, `MAX`)
 - range check? (or let the driver fail?)
 - support multiple files
-- configure some parameters without any file; `./ftec_config --set "SEN=360"`
+- configure some parameters without any file: `./ftec_config --set "SEN=360"`
+- possibility to select SLOT from CLI: `./ftec_config --slot "S2" --profile "ACC"`
 - list available devices (`name` available in `input` directory): `./ftec_config --list-devices`
 - possiblity to configure multiple slot at the same time
 - gui?
 
+
 ## Notes
 
+Wheel Parameters  
+advanced_mode=1 (to be forced?)  
+SLOT=(AS=1, S1=2 ... S5=6)  
 
-Wheel Parameters
-advanced_mode=1 (to be forced?)
-SLOT=(AS=1, S1=2 ... S5=6)
+advanced_mode=0 (should not be used => less pararemeters available)  
+SLOT=(AS=1, AC=2)  
 
-advanced_mode=0 (should not be used => less pararemeters available)
-SLOT=(AS=1, AC=2)
-
-SEN=AUTO (2530)
-FF=100
-FFS=PEAK
-NDP=50 (OFF=0,100)
-NFR=0 (OFF=0,100)
-NIN=0 (OFF=0,100)
-INT=11 (OFF=0,20)
+SEN=AUTO (2530)  
+FF=100  
+FFS=PEAK  
+NDP=50 (OFF=0,100)  
+NFR=0 (OFF=0,100)  
+NIN=0 (OFF=0,100)  
+INT=11 (OFF=0,20)  
 BLI=OFF (1,OFF=101)
-FEI=100 (0,100)
-FOR=100 (OFF=0,120)
-SPR=100 (OFF=0,120)
-DPR=100 (OFF=0,120)
-BRF=50 (MIN=0,MAX=100)
+FEI=100 (0,100)  
+FOR=100 (OFF=0,120)  
+SPR=100 (OFF=0,120)  
+DPR=100 (OFF=0,120)  
+BRF=50 (MIN=0,MAX=100)  
 
 
 ```
