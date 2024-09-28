@@ -6,6 +6,7 @@ import logging
 import os
 import sys
 
+SYSFS_PATH="/sys/module/hid_fanatec/drivers/hid:fanatec/"
 
 # recursive file search
 def search_filepath(top: str, filename: str, max_depth: int = 3) -> str:
@@ -51,19 +52,20 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-p', '--profile', type=str)
-    parser.add_argument('-t', '--topdir', nargs='?', const=1, type=str, default="/sys/module/hid_fanatec/drivers/hid:fanatec/")
+    parser.add_argument('-t', '--topdir', nargs='?', const=1, type=str, default=SYSFS_PATH)
     parser.add_argument('-i', '--input', nargs='?', const=1, type=str, default="profiles.ini")
     args = parser.parse_args()
 
     try:
         output = search_filepath( args.topdir, 'advanced_mode' )
-        logging.debug(f'output_dir={output}')
+        logging.debug(f'path={output}')
+        logging.info(f'device id    {os.path.basename(output)}')
 
         device_input = search_filepath( args.topdir, 'name' )
         # logging.debug(f'device_input={device_input}')
         with open( os.path.join(device_input, 'name'), "r" ) as f:
             device_name = f.read()
-            logging.info(f'device="{device_name.strip()}"')
+            logging.info(f'device       {device_name.strip()}')
 
         # TODO: remove all and force advance mode 
         applyConfiguration(args.input, "all", output)
