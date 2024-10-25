@@ -67,8 +67,6 @@ def main():
             device_name = f.read()
             logging.info(f'device       {device_name.strip()}')
 
-        # TODO: remove all and force advance mode 
-        applyConfiguration(args.input, "all", output)
         applyConfiguration(args.input, args.profile, output)
         sys.exit(0)
 
