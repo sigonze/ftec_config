@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
-import configparser
+import json
 import argparse
 import logging
 import os
 import sys
 
 SYSFS_PATH="/sys/module/hid_fanatec/drivers/hid:fanatec/"
+PROFILES_PATH="profiles"
 
 # recursive file search
 def search_filepath(top: str, filename: str, max_depth: int = 3) -> str:
@@ -23,51 +24,51 @@ def search_filepath(top: str, filename: str, max_depth: int = 3) -> str:
         if filename in files:
             return root
 
-    raise Exception('{filename} not found')
+    raise Exception(f'{filename} not found')
 
 
 # Configure driver
-def applyConfiguration(filename: str, profile: str, output: str):
-    if not os.path.isfile(filename):
-        raise Exception(f'file {filename} does not exist')
+def applyConfiguration(profile: str, output: str):
+    if not os.path.isfile(profile):
+        raise Exception(f'file {profile}[.json] does not exist')
 
-    parser = configparser.RawConfigParser()
-    parser.optionxform = str
-    parser.read(filename)
+    with open(profile, 'r') as json_file:
+        data=json.load(json_file)
 
-    for name, value in parser.items(profile):
+    for name, value in data.items():
         fpath = os.path.join(output, name)
         # if parameter not found just skip it
         if not os.path.isfile(fpath):
             logging.debug(f'{name} does not exist (skipped)')
         else:
             with open(fpath, "w") as f:
-                f.write(value)
+                f.write(str(value))
             logging.debug(f'{name} set to {value}')
 
 
-# main funciton
+# main function
 def main():
     logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG)
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-p', '--profile', type=str)
-    parser.add_argument('-t', '--topdir', nargs='?', const=1, type=str, default=SYSFS_PATH)
-    parser.add_argument('-i', '--input', nargs='?', const=1, type=str, default="profiles.ini")
+    parser.add_argument('-s', '--sysfs_dir', nargs='?', const=1, type=str, default=SYSFS_PATH)
+    parser.add_argument('-d', '--profile_dir', nargs='?', const=1, type=str, default=PROFILES_PATH)
     args = parser.parse_args()
 
     try:
-        output = search_filepath( args.topdir, 'advanced_mode' )
+        output = search_filepath( args.sysfs_dir, 'advanced_mode' )
         logging.debug(f'path={output}')
         logging.info(f'device id    {os.path.basename(output)}')
 
-        device_input = search_filepath( args.topdir, 'name' )
+        device_input = search_filepath( args.sysfs_dir, 'name' )
         # logging.debug(f'device_input={device_input}')
         with open( os.path.join(device_input, 'name'), "r" ) as f:
             device_name = f.read()
             logging.info(f'device       {device_name.strip()}')
 
-        applyConfiguration(args.input, args.profile, output)
+        profile_path = os.path.join(args.profile_dir, args.profile + ".json")
+        applyConfiguration(profile_path, output)
         sys.exit(0)
 
     except Exception as e:

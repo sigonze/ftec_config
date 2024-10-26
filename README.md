@@ -4,14 +4,14 @@ Python script to configure Fanatec Wheel under Linux using Sysfs
 
 ## Usage
 
-Configure recommended settings for F1 23
+Configure Wheel for F1 23
 ```
-./ftec_config -p "F1 23"
+./ftec_config -p f1_23
 ```
 
 Test configuration
 ```
-./ftec_config -p "default" -t test
+./ftec_config -p default -s test
 ```
 
 ## Ideas for improvement
@@ -20,9 +20,9 @@ Test configuration
 - range check? (or let the driver fail?)
 - support multiple files
 - display current values: `./ftec_config --show`
-- save current values?: `./ftec_config --save "myfile.ini"`
+- save current values?: `./ftec_config --save "myfile.json"`
 - configure some parameters without any file: `./ftec_config --set "SEN=360"`
-- possibility to select SLOT from CLI: `./ftec_config --slot "S2" --profile "ACC"`
+- possibility to select SLOT from CLI: `./ftec_config --slot "S2" --profile acc`
 - list available devices (`name` available in `input` directory): `./ftec_config --list-devices`
 - possiblity to configure multiple slot at the same time
 - gui?
