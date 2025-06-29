@@ -51,7 +51,7 @@ def main():
     logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG)
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-p', '--profile', type=str)
+    parser.add_argument('profile', type=str)
     parser.add_argument('-s', '--sysfs_dir', nargs='?', const=1, type=str, default=SYSFS_PATH)
     parser.add_argument('-d', '--profile_dir', nargs='?', const=1, type=str, default=PROFILES_PATH)
     args = parser.parse_args()

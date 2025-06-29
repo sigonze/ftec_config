@@ -6,12 +6,12 @@ Python script to configure Fanatec Wheel under Linux using Sysfs
 
 Configure Wheel for F1 23
 ```
-./ftec_config -p f1_23
+./ftec_config f1_23
 ```
 
 Test configuration
 ```
-./ftec_config -p default -s test
+./ftec_config default -s test
 ```
 
 ## Ideas for improvement
