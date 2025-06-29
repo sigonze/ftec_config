@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
 
-import json
+import configparser
 import argparse
 import logging
 import os
 import sys
 
 SYSFS_PATH="/sys/module/hid_fanatec/drivers/hid:fanatec/"
-PROFILES_PATH="profiles"
+PROFILE_FILE="profiles.ini"
+
+# Custom ConfigParser to preserve case
+class CaseSensitiveConfigParser(configparser.ConfigParser):
+    def optionxform(self, optionstr):
+        return optionstr # Return the option name as is, preserving case
 
 # recursive file search
 def search_filepath(top: str, filename: str, max_depth: int = 3) -> str:
@@ -28,22 +33,30 @@ def search_filepath(top: str, filename: str, max_depth: int = 3) -> str:
 
 
 # Configure driver
-def applyConfiguration(profile: str, output: str):
-    if not os.path.isfile(profile):
-        raise Exception(f'file {profile}[.json] does not exist')
+def applyConfiguration(profile_name: str, output: str):
+    current_script_path = os.path.abspath(__file__)
+    script_directory = os.path.dirname(current_script_path)
+    profiles_ini_path = os.path.join(script_directory, PROFILE_FILE)
 
-    with open(profile, 'r') as json_file:
-        data=json.load(json_file)
+    if not os.path.isfile(profiles_ini_path):
+        raise Exception(f'file {PROFILE_FILE} does not exist')
 
-    for name, value in data.items():
-        fpath = os.path.join(output, name)
-        # if parameter not found just skip it
-        if not os.path.isfile(fpath):
-            logging.debug(f'{name} does not exist (skipped)')
-        else:
-            with open(fpath, "w") as f:
-                f.write(str(value))
-            logging.debug(f'{name} set to {value}')
+    config = CaseSensitiveConfigParser()
+    config.read(profiles_ini_path)
+    if config.has_section(profile_name):
+        profile_values = {key: value for key, value in config.items(profile_name)}
+
+        for name, value in profile_values.items():
+            fpath = os.path.join(output, name)
+            # if parameter not found just skip it
+            if not os.path.isfile(fpath):
+                logging.debug(f'{name} does not exist (skipped)')
+            else:
+                with open(fpath, "w") as f:
+                    f.write(str(value))
+                logging.debug(f'{name} set to {value}')
+    else:
+        logging.error(f'Profile {profile_name} not found in configuration.')
 
 
 # main function
@@ -53,7 +66,6 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('profile', type=str)
     parser.add_argument('-s', '--sysfs_dir', nargs='?', const=1, type=str, default=SYSFS_PATH)
-    parser.add_argument('-d', '--profile_dir', nargs='?', const=1, type=str, default=PROFILES_PATH)
     args = parser.parse_args()
 
     try:
@@ -62,13 +74,11 @@ def main():
         logging.info(f'device id    {os.path.basename(output)}')
 
         device_input = search_filepath( args.sysfs_dir, 'name' )
-        # logging.debug(f'device_input={device_input}')
         with open( os.path.join(device_input, 'name'), "r" ) as f:
             device_name = f.read()
             logging.info(f'device       {device_name.strip()}')
 
-        profile_path = os.path.join(args.profile_dir, args.profile + ".json")
-        applyConfiguration(profile_path, output)
+        applyConfiguration(args.profile, output)
         sys.exit(0)
 
     except Exception as e:
