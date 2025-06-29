@@ -33,21 +33,17 @@ def search_filepath(top: str, filename: str, max_depth: int = 3) -> str:
 
 
 # Configure driver
-def applyConfiguration(profile_name: str, output: str):
-    current_script_path = os.path.abspath(__file__)
-    script_directory = os.path.dirname(current_script_path)
-    profiles_ini_path = os.path.join(script_directory, PROFILE_FILE)
-
-    if not os.path.isfile(profiles_ini_path):
-        raise Exception(f'file {PROFILE_FILE} does not exist')
+def applyConfiguration(profile_file: str, profile_name: str, device_path: str):
+    if not os.path.isfile(profile_file):
+        raise Exception(f'file {profile_file} does not exist')
 
     config = CaseSensitiveConfigParser()
-    config.read(profiles_ini_path)
+    config.read(profile_file)
     if config.has_section(profile_name):
         profile_values = {key: value for key, value in config.items(profile_name)}
 
         for name, value in profile_values.items():
-            fpath = os.path.join(output, name)
+            fpath = os.path.join(device_path, name)
             # if parameter not found just skip it
             if not os.path.isfile(fpath):
                 logging.debug(f'{name} does not exist (skipped)')
@@ -65,20 +61,30 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('profile', type=str)
-    parser.add_argument('-s', '--sysfs_dir', nargs='?', const=1, type=str, default=SYSFS_PATH)
+    parser.add_argument('-c', '--config', type=str, help='Change the default configuration file which contains profiles')
+    parser.add_argument('-w', '--working_dir', type=str, default=SYSFS_PATH, help='Change the default working directory where to search Fanatec tuning files')
     args = parser.parse_args()
 
     try:
-        output = search_filepath( args.sysfs_dir, 'advanced_mode' )
-        logging.debug(f'path={output}')
-        logging.info(f'device id    {os.path.basename(output)}')
+        device_path = search_filepath( args.working_dir, 'advanced_mode' )
+        logging.debug(f'path={device_path}')
+        logging.info(f'device id    {os.path.basename(device_path)}')
 
-        device_input = search_filepath( args.sysfs_dir, 'name' )
+        device_input = search_filepath( args.working_dir, 'name' )
         with open( os.path.join(device_input, 'name'), "r" ) as f:
             device_name = f.read()
             logging.info(f'device       {device_name.strip()}')
 
-        applyConfiguration(args.profile, output)
+        if args.config is None:
+            current_script_path = os.path.abspath(__file__)
+            script_directory = os.path.dirname(current_script_path)
+            profiles_ini_path = os.path.join(script_directory, PROFILE_FILE)
+        else:
+            profiles_ini_path = args.config
+
+        applyConfiguration( profile_file = profiles_ini_path,
+                            profile_name = args.profile,
+                            device_path = device_path)
         sys.exit(0)
 
     except Exception as e:

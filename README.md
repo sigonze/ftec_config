@@ -11,7 +11,7 @@ Configure Wheel for F1 23
 
 Test configuration
 ```
-./ftec_config default -s test
+./ftec_config default -w test
 ```
 
 ## Ideas for improvement
