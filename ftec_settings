@@ -48,7 +48,7 @@ def apply_configuration(profile_file: str, profile_name: str, device_path: str):
 
             with open(fpath, "w") as f:
                 f.write(str(value))
-            logging.debug(f'{name} set to {value}.')
+            logging.debug(f'{name} set to {value}')
     else:
         logging.error(f'Profile {profile_name} not found in configuration.')
 
